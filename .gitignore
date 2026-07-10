@@ -1,0 +1,40 @@
+# Local environments and editor state
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.claude/
+.codex/
+.agents/
+
+# Local credentials and machine-specific settings
+.env
+.env.*
+!.env.example
+config.local.toml
+*.pem
+*.key
+
+# Source data, workbook deliverables, and generated caches
+data/
+outputs/
+cache/
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.parquet
+*.bin
+*.log
+*.err
+~$*.xlsx
+
+# Dashboard build artifacts: regenerated from a local source workbook
+src/dashboard_build/aggregated*.json
+src/dashboard_build/index.html
+web/public/dashboard.html
+web/node_modules/
+web/.vercel/
+
+# Accidental system-file copies
+%SystemDrive%/

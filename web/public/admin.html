@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台 · 中国乘用车海外数据看板</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0A1628;color:#E8EEF8;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:24px}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .header h1{font-size:20px;font-weight:600}
+  .header h1 .acc{color:#C9A84C}
+  .back-btn{padding:8px 16px;background:#1a3060;color:#C9D6EC;border:1px solid #2a5090;border-radius:6px;cursor:pointer;font-size:13px;text-decoration:none;font-family:inherit}
+  .back-btn:hover{background:#1e3a6e}
+  .tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid #1e3a6e}
+  .tab{padding:10px 24px;cursor:pointer;font-size:14px;color:#5A7098;border-bottom:2px solid transparent;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none}
+  .tab.active{color:#C9A84C;border-bottom-color:#C9A84C;font-weight:600}
+  .tab:hover{color:#8A9DC0}
+  .panel{display:none}
+  .panel.active{display:block}
+  .stats{display:flex;gap:16px;margin-bottom:24px}
+  .stat-card{flex:1;padding:16px;background:#0F2044;border:1px solid #1e3a6e;border-radius:10px;text-align:center}
+  .stat-card .num{font-size:28px;font-weight:700;color:#C9A84C}
+  .stat-card .label{font-size:12px;color:#5A7098;margin-top:4px}
+  table{width:100%;border-collapse:collapse;background:#0F2044;border:1px solid #1e3a6e;border-radius:10px;overflow:hidden}
+  th{background:#132a52;text-align:left;padding:12px 16px;font-size:12px;color:#8A9DC0;font-weight:600;letter-spacing:1px}
+  td{padding:10px 16px;font-size:13px;border-top:1px solid #1a2e50}
+  tr:hover td{background:#132a52}
+  .status-ok{color:#5BC4A0}
+  .status-fail{color:#E85A5A}
+  .loading{text-align:center;padding:40px;color:#5A7098}
+  .gold-btn{padding:6px 14px;background:linear-gradient(135deg,#C9A84C,#E8C870);color:#0A1628;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
+  .gold-btn:hover{opacity:0.9}
+  .gold-btn:disabled{opacity:0.5;cursor:not-allowed}
+  .del-btn{padding:4px 10px;background:none;border:1px solid #E85A5A;color:#E85A5A;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit}
+  .del-btn:hover{background:#E85A5A;color:#fff}
+  textarea{width:100%;padding:12px;background:#1a3060;border:1px solid #2a5090;border-radius:8px;color:#E8EEF8;font-size:13px;font-family:'Consolas','Courier New',monospace;outline:none;resize:vertical}
+  textarea:focus{border-color:#4A90E2}
+  textarea::placeholder{color:#4A6080}
+  .msg{font-size:13px;margin-top:10px;min-height:20px}
+  .msg.error{color:#E85A5A}
+  .msg.success{color:#5BC4A0}
+  .form-section{background:#0F2044;border:1px solid #1e3a6e;border-radius:10px;padding:20px;margin-bottom:20px}
+  .form-section h3{font-size:14px;margin-bottom:12px;color:#8A9DC0}
+  .hint{font-size:11px;color:#4A6080;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>管理<span class="acc">后台</span></h1>
+  <a href="/dashboard.html" class="back-btn">返回看板</a>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('logs')">访问日志</button>
+  <button class="tab" onclick="switchTab('users')">用户管理</button>
+</div>
+
+<!-- ===== 访问日志面板 ===== -->
+<div class="panel active" id="panel-logs">
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button class="gold-btn" onclick="loadLogs()">刷新</button>
+    <button class="gold-btn" onclick="exportExcel()">导出Excel</button>
+  </div>
+  <div class="stats" id="stats" style="display:none">
+    <div class="stat-card"><div class="num" id="totalCount">0</div><div class="label">总登录次数</div></div>
+    <div class="stat-card"><div class="num" id="uniqueCount">0</div><div class="label">独立用户数</div></div>
+    <div class="stat-card"><div class="num" id="todayCount">0</div><div class="label">今日登录</div></div>
+    <div class="stat-card"><div class="num" id="failCount">0</div><div class="label">失败尝试</div></div>
+  </div>
+  <div id="logContent"><div class="loading">加载中...</div></div>
+</div>
+
+<!-- ===== 用户管理面板 ===== -->
+<div class="panel" id="panel-users">
+  <div class="form-section">
+    <h3>批量添加用户</h3>
+    <textarea id="batchInput" rows="6" placeholder="每行格式：机构  姓名  邮箱（用空格或Tab分隔）&#10;例如：&#10;广发证券  张三  zhangsan@gf.com.cn&#10;中信建投  李四  lisi@csc.com.cn&#10;&#10;也可以只填邮箱：zhangsan@gf.com.cn"></textarea>
+    <div class="hint">每行格式：机构 姓名 邮箱（空格或Tab分隔），密码自动生成。也可以只填邮箱。已存在的邮箱会自动跳过。</div>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center">
+      <button class="gold-btn" onclick="batchAdd()">批量添加</button>
+      <span class="msg" id="batchMsg"></span>
+    </div>
+    <div id="batchResult" style="margin-top:12px;display:none">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <strong style="font-size:13px;color:#8A9DC0">新增账号列表</strong>
+        <button class="gold-btn" onclick="copyResult()">复制</button>
+        <button class="gold-btn" onclick="exportUsers()">导出Excel</button>
+      </div>
+      <textarea id="resultText" rows="5" readonly style="background:#132a52"></textarea>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="margin:0">用户列表 (<span id="userTotal">0</span>人)</h3>
+      <button class="gold-btn" onclick="loadUsers()">刷新</button>
+    </div>
+    <div id="userContent"><div class="loading">点击刷新加载...</div></div>
+  </div>
+</div>
+
+<script>
+let _cachedLogs = [];
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=> t.classList.toggle('active', t.textContent.includes(name==='logs'?'日志':'用户')));
+  document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='users') loadUsers();
+}
+
+// ===== 访问日志 =====
+async function loadLogs(){
+  const content = document.getElementById('logContent');
+  try {
+    const res = await fetch('/api/logs?count=200');
+    const data = await res.json();
+    if(!data.success){
+      content.innerHTML = res.status===401 ? '<div class="loading">请先<a href="/login.html" style="color:#C9A84C">登录</a></div>' : '<div class="loading">'+(data.message||'加载失败')+'</div>';
+      return;
+    }
+    const logs = data.logs;
+    _cachedLogs = logs;
+    const stats = document.getElementById('stats');
+    stats.style.display = 'flex';
+    const successLogs = logs.filter(l => l.success);
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('totalCount').textContent = successLogs.length;
+    document.getElementById('uniqueCount').textContent = new Set(successLogs.map(l=>l.email)).size;
+    document.getElementById('todayCount').textContent = successLogs.filter(l=>l.time&&l.time.startsWith(today)).length;
+    document.getElementById('failCount').textContent = logs.filter(l=>!l.success).length;
+    if(!logs.length){ content.innerHTML='<div class="loading">暂无登录记录</div>'; return; }
+    let html='<table><thead><tr><th>状态</th><th>机构</th><th>姓名</th><th>邮箱</th><th>时间</th><th>IP</th></tr></thead><tbody>';
+    for(const log of logs){
+      const t=log.time?new Date(log.time):null;
+      const ts=t?t.toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}):'-';
+      html+=`<tr><td class="${log.success?'status-ok':'status-fail'}">${log.success?'成功':'失败'}</td><td>${esc(log.org||'-')}</td><td>${esc(log.name||'-')}</td><td>${esc(log.email)}</td><td>${ts}</td><td>${esc(log.ip||'-')}</td></tr>`;
+    }
+    content.innerHTML=html+'</tbody></table>';
+  } catch(e){ content.innerHTML='<div class="loading">网络错误</div>'; }
+}
+
+function exportExcel(){
+  if(!_cachedLogs.length){alert('暂无数据');return;}
+  const BOM='\uFEFF';
+  const h='状态,机构,姓名,邮箱,时间（北京时间）,IP地址,User-Agent\n';
+  const rows=_cachedLogs.map(l=>{
+    const t=l.time?new Date(l.time).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}):'-';
+    return `${l.success?'成功':'失败'},${l.org||'-'},${l.name||'-'},${l.email},"${t}",${l.ip||'-'},"${(l.ua||'-').replace(/"/g,'""')}"`;
+  }).join('\n');
+  dl(BOM+h+rows, `访问日志_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+// ===== 用户管理 =====
+function genPwd(){ const c='ABCDEFGHJKMNPQRSTWXYZabcdefghjkmnpqrstwxyz23456789'; let p=''; for(let i=0;i<6;i++) p+=c[Math.floor(Math.random()*c.length)]; return p; }
+
+function parseLine(line){
+  // 支持格式：机构 姓名 邮箱 / 姓名 邮箱 / 仅邮箱
+  const parts=line.split(/[\t]+|\s{2,}/).map(s=>s.trim()).filter(Boolean);
+  // 找到邮箱所在位置
+  const emailIdx=parts.findIndex(p=>p.includes('@'));
+  if(emailIdx<0) return null;
+  const email=parts[emailIdx];
+  if(emailIdx===0) return {email, org:'', name:''};
+  if(emailIdx===1) return {email, org:'', name:parts[0]};
+  return {email, org:parts[0], name:parts.slice(1,emailIdx).join(' ')};
+}
+
+async function batchAdd(){
+  const input=document.getElementById('batchInput').value.trim();
+  if(!input){showMsg('batchMsg','请输入用户信息','error');return;}
+  const lines=input.split('\n').map(l=>l.trim()).filter(Boolean);
+  const users=[];
+  for(const line of lines){
+    const parsed=parseLine(line);
+    if(parsed) users.push({...parsed, password:genPwd()});
+  }
+  if(!users.length){showMsg('batchMsg','未找到有效邮箱','error');return;}
+  showMsg('batchMsg','添加中...','');
+  try{
+    const res=await fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({users})});
+    const data=await res.json();
+    if(data.success){
+      showMsg('batchMsg',data.message,'success');
+      const result=document.getElementById('batchResult');
+      result.style.display='block';
+      const lines=users.map(u=>`${u.org}\t${u.name}\t${u.email}\t${u.password}`).join('\n');
+      document.getElementById('resultText').value='机构\t姓名\t邮箱\t密码\n'+lines;
+      loadUsers();
+    } else {
+      showMsg('batchMsg',data.message||'添加失败','error');
+    }
+  }catch(e){showMsg('batchMsg','网络错误','error');}
+}
+
+function copyResult(){
+  const t=document.getElementById('resultText');
+  t.select();
+  document.execCommand('copy');
+  alert('已复制到剪贴板');
+}
+
+function exportUsers(){
+  const t=document.getElementById('resultText').value;
+  if(!t)return;
+  const BOM='\uFEFF';
+  const csv=t.replace(/\t/g,',');
+  dl(BOM+csv, `新增账号_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
+async function loadUsers(){
+  const content=document.getElementById('userContent');
+  content.innerHTML='<div class="loading">加载中...</div>';
+  try{
+    const res=await fetch('/api/users');
+    const data=await res.json();
+    if(!data.success){content.innerHTML='<div class="loading">'+(data.message||'加载失败')+'</div>';return;}
+    document.getElementById('userTotal').textContent=data.count;
+    if(!data.users.length){content.innerHTML='<div class="loading">暂无用户</div>';return;}
+    let html='<table><thead><tr><th>机构</th><th>姓名</th><th>邮箱</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+    for(const u of data.users){
+      const ct=u.createdAt?new Date(u.createdAt).toLocaleString('zh-CN',{timeZone:'Asia/Shanghai'}):'-';
+      html+=`<tr><td>${esc(u.org||'-')}</td><td>${esc(u.name||'-')}</td><td>${esc(u.email)}</td><td>${ct}</td><td><button class="del-btn" onclick="delUser('${esc(u.email)}')">删除</button></td></tr>`;
+    }
+    content.innerHTML=html+'</tbody></table>';
+  }catch(e){content.innerHTML='<div class="loading">网络错误</div>';}
+}
+
+async function delUser(email){
+  if(!confirm(`确定删除 ${email}？`))return;
+  try{
+    const res=await fetch('/api/users',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.success) loadUsers();
+    else alert(data.message||'删除失败');
+  }catch(e){alert('网络错误');}
+}
+
+// ===== 工具函数 =====
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');}
+function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className='msg '+(type||'');}
+function dl(content,filename){const b=new Blob([content],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename;a.click();URL.revokeObjectURL(u);}
+
+loadLogs();
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国乘用车海外数据看板 · 登录</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0A1628;color:#E8EEF8;font-family:'PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+  .container{width:420px;padding:40px;background:#0F2044;border:1px solid #1e3a6e;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.4);position:relative;overflow:hidden}
+  .container::before{content:'';position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(74,144,226,0.1) 0%,transparent 70%);pointer-events:none}
+  .logo{text-align:center;margin-bottom:28px}
+  .logo h1{font-size:24px;font-weight:700;letter-spacing:2px}
+  .logo h1 .acc{color:#C9A84C}
+  .logo .sub{font-size:13px;color:#5A7098;margin-top:6px}
+  .form-group{margin-bottom:20px}
+  .form-group label{display:block;font-size:13px;color:#8A9DC0;margin-bottom:8px;font-weight:500}
+  .form-group input{width:100%;padding:12px 16px;background:#1a3060;border:1px solid #2a5090;border-radius:8px;color:#E8EEF8;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
+  .form-group input:focus{border-color:#4A90E2}
+  .form-group input::placeholder{color:#4A6080}
+  .btn{width:100%;padding:13px;background:linear-gradient(135deg,#C9A84C,#E8C870);color:#0A1628;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:1px;transition:opacity .2s}
+  .btn:hover{opacity:0.9}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .msg{text-align:center;font-size:13px;margin-top:14px;min-height:20px}
+  .msg.error{color:#E85A5A}
+  .msg.success{color:#5BC4A0}
+  .footer{text-align:center;margin-top:24px;font-size:11px;color:#3A5070}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <h1>中国<span class="acc">乘用车</span>海外数据看板</h1>
+    <div class="sub">广发证券 · 汽车行业研究</div>
+  </div>
+
+  <div class="form-group">
+    <label>邮箱地址</label>
+    <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email">
+  </div>
+  <div class="form-group">
+    <label>密码</label>
+    <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="current-password">
+  </div>
+  <button class="btn" id="loginBtn" onclick="doLogin()">登 录</button>
+  <div class="msg" id="msg"></div>
+
+  <div class="footer">数据来源：中国汽车工业协会 / 中国海关总署 / Marklines</div>
+</div>
+
+<script>
+async function doLogin(){
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const msgEl = document.getElementById('msg');
+  const btn = document.getElementById('loginBtn');
+
+  if(!email || !email.includes('@')){
+    msgEl.textContent = '请输入有效的邮箱地址';
+    msgEl.className = 'msg error';
+    return;
+  }
+  if(!password){
+    msgEl.textContent = '请输入密码';
+    msgEl.className = 'msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  msgEl.textContent = '';
+  msgEl.className = 'msg';
+
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if(data.success){
+      msgEl.textContent = '登录成功，正在跳转...';
+      msgEl.className = 'msg success';
+      setTimeout(()=>{ window.location.href = '/dashboard.html'; }, 600);
+    } else {
+      msgEl.textContent = data.message || '登录失败';
+      msgEl.className = 'msg error';
+      btn.disabled = false;
+      btn.textContent = '登 录';
+    }
+  } catch(e){
+    msgEl.textContent = '网络错误，请重试';
+    msgEl.className = 'msg error';
+    btn.disabled = false;
+    btn.textContent = '登 录';
+  }
+}
+
+document.getElementById('emailInput').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('passwordInput').focus(); });
+document.getElementById('passwordInput').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

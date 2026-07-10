@@ -1,0 +1,6 @@
+# Copy to config.local.toml only if you want a machine-local record of paths.
+# The operational PowerShell scripts receive all critical paths explicitly.
+
+raw_data_root = "D:\\research-data\\export-dashboard"
+working_output_root = "D:\\research-output\\export-dashboard"
+vercel_scope = ""
