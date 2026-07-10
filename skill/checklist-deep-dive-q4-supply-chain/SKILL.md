@@ -38,25 +38,57 @@ description: "CheckList深挖专题：Q4-产业链深度分析。对一家公司
 3. **4.8 强制交付**：同目录另存 `{公司名}-CheckList深挖-Q4-产业链全景图Prompt.md`（或 HTML 内附录节 + 本地 md 二选一，但 md 仍只落本地、不进 Git）。
 4. **禁止**：未经用户要求不得 `git push` 任何产出；不得默认生成 docx/PDF。
 
-### HTML 样式与结构参考（携程样板）
+### HTML 样式与结构参考（携程样板 · 强制对齐）
 
-> **视觉与版式以用户提供的「携程 HTML 样板」为准。** 用户尚未提供时，先按下列组件清单与信息架构实现；收到携程样板后，对齐其配色、字体、Hero、卡片、表格与 TOC 风格，并更新本 skill 中的样板路径。
+> **所有 HTML 产出必须对齐仓库内携程样板。** 生成前**先读取样板文件**，复用其 CSS 变量、字体、布局与组件 class 命名；禁止自造另一套视觉风格。
 
-**样板路径（待用户补充）**：`（用户稍后提供，例如 outputs/.../携程-CheckList深挖-Q4-....html）`
+**样板路径（Git 内，可 pull 同步）**：
 
-**在收到携程样板前，最低实现标准**（与样板冲突时以携程为准）：
+```
+skill/checklist-deep-dive-q4-supply-chain/examples/携程集团-CheckList深挖-Q4-产业链.html
+```
 
-1. **布局**：左侧 sticky 目录 TOC + 右侧正文；移动端 TOC 可折叠。
-2. **必备可视化组件**（按子问题对号入座）：
-   - 摘要：Hero KPI bar + 3-4 判断卡片 + KPI 速览表
-   - 4.1：分层 tier-flow 图（L0→L5 或 L1→Ln）
-   - 4.2：样本终端价**堆叠条形图** + 成本/加价明细表
-   - 4.3：关键公司**毛利率/ROE 横向条形对标**
-   - 4.4：各环节 KPI 卡片 + **「附加值 vs 资本回报」象限 SVG**
-   - 4.5 / 公司专题：隐性条款表 + **事件 timeline**
-   - 4.7：**三情形卡片（悲观/基础/乐观 + 概率）** + ±20% 敏感性条 + 历史冲击参照
-   - 投资定性启示：4 卡片（受益受损 / 拐点信号 / 关键变量 / 安全边际方向），**无估值数字**
-3. **技术**：单文件 HTML；中文 UTF-8；数字用等宽或 tabular 字体；表格可横向滚动。
+**生成 HTML 时的工作方式**：
+
+1. 以携程样板为**结构与样式母版**（`:root` 色板、`.layout` / `.toc` / `.hero`、表格、卡片等 CSS 直接沿用或最小改动）。
+2. 替换 Hero 标题、subtitle、meta、hero-kpi 数值为**当前焦点公司**数据。
+3. TOC 锚点按 4.1–4.7 + 摘要/结论/附录 生成，支持 `.sub` 二级目录（见样板）。
+4. 正文 `<section id="...">` + `<h2><span class="num-prefix">4.x</span>…</h2>` 结构与样板一致。
+5. 产出写入 `outputs/Claude-CheckList-深挖/{公司名}-CheckList深挖-Q4-产业链深度分析.html`（**仅本地，不进 Git**）。
+
+**携程样板设计规范摘要**（细节以 html 文件为准）：
+
+| 维度 | 规范 |
+|------|------|
+| 字体 | Google Fonts：`Noto Sans SC`（正文）、`Noto Serif SC`（标题）、`JetBrains Mono`（数字） |
+| 色板 | 主色 `--accent: #0a4fa8`；页底 `#f7f9fc`；Hero 深色 `#0f1923` + 蓝绿 radial 渐变 |
+| 布局 | 左 240px sticky TOC + 右正文 max ~1050px；`<1024px` 隐藏 TOC |
+| Hero | `.breadcrumb` + `h1` + `.subtitle` + `.meta` + `.hero-kpi-bar`（4 列 KPI） |
+| 摘要 | `.judgment-grid` + `.judgment-card`（`.j-num` 编号）+ 核心 KPI 表 |
+| 4.1 | `.tier-flow` / `.tier-row` / `.tier-label` / `.tier-body` 纵向分层图 |
+| 4.2 | `.stacked-bar` + `.stacked-seg` + `.stacked-legend` + 明细表 |
+| 4.3 | `.bar-chart` / `.bar-row` / `.bar-fill` 毛利率或 ROE 对标 |
+| 4.4 | `.kpi-grid` + 各环节 `.kpi-card`；可选 `.risk-matrix` 或象限图 |
+| 4.5/专题 | 表格 + `.timeline` / `.tl-item`；`.callout` / `.callout-warn` 高亮 |
+| 4.6 | 表格 + `.profit-pool-pair`（利润池迁移，若适用） |
+| 4.7 | `.scenario-grid` + `.scenario-card`（`.bear` / 基础 / `.bull`）+ 敏感性 `.bar-neg-track` |
+| 投资启示 | `.card` 或 judgment 风格四要点；**无 PE/目标价** |
+| 引用 | 正文数据旁用 `.source-tag` 或 `.tag` / `.tag-pos` / `.tag-neg` / `.tag-warn` |
+| 表格 | 表头 `--accent` 蓝底白字；偶数行 `--row-alt` |
+| 结论 | `.summary-box` 包裹 ≤500 字研究结论 |
+
+**必备可视化组件**（按子问题对号入座，不可纯文字堆砌）：
+
+- 摘要：Hero KPI bar + 3-4 判断卡片 + KPI 速览表  
+- 4.1：tier-flow 分层图  
+- 4.2：堆叠条形图 + 加价明细表  
+- 4.3：毛利率/ROE 横向条形对标  
+- 4.4：环节 KPI 卡片 + 象限/矩阵图  
+- 4.5 / 公司专题：隐性条款表 + timeline  
+- 4.7：三情形卡片 + 敏感性条 + 历史冲击参照  
+- 投资定性启示：4 卡片要点，无估值数字  
+
+**技术**：单文件 HTML，CSS 内嵌；可引用 Google Fonts CDN；中文 UTF-8。
 
 ### 研究方法：信息源
 
