@@ -1,0 +1,19 @@
+# Research outputs / deliverables — keep local only, never push
+outputs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / local machine config
+.env
+.env.*
+!.env.example
+.cursor/mcp.json
+**/mcp.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
