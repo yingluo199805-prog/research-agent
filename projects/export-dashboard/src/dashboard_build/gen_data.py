@@ -34,9 +34,12 @@ def read_haiguan_cv(path):
 
 df = read_haiguan_cv(xlsx)
 
-# dataFileDate 从文件名解析：260414 → '2026-04-14'
-_m = re.search(r'(\d{2})(\d{2})(\d{2})', DATA_FILE)
-DATA_FILE_DATE = f'20{_m.group(1)}-{_m.group(2)}-{_m.group(3)}' if _m else ''
+# dataFileDate can be provided explicitly or parsed from the filename:
+# 260414 -> '2026-04-14'
+DATA_FILE_DATE = os.environ.get('DASHBOARD_DATA_FILE_DATE')
+if not DATA_FILE_DATE:
+    _m = re.search(r'(\d{2})(\d{2})(\d{2})', DATA_FILE)
+    DATA_FILE_DATE = f'20{_m.group(1)}-{_m.group(2)}-{_m.group(3)}' if _m else ''
 
 # 区域/能源 清洗
 def remap_region(r, c):

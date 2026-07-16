@@ -1,6 +1,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$DataWorkbook,
-  [string]$DataFileDate
+  [string]$DataFileDate,
+  [int]$MklsMaxYear,
+  [int]$MklsMaxMonth
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,6 +21,8 @@ if (-not $DataFileDate) {
 
 $env:DASHBOARD_DATA_FILE = $resolvedWorkbook
 $env:DASHBOARD_DATA_FILE_DATE = $DataFileDate
+if ($MklsMaxYear) { $env:DASHBOARD_MKLS_MAX_YEAR = [string]$MklsMaxYear }
+if ($MklsMaxMonth) { $env:DASHBOARD_MKLS_MAX_MONTH = [string]$MklsMaxMonth }
 Push-Location $builderRoot
 try {
   foreach ($script in @('gen_data.py', 'gen_data_caam.py', 'gen_data_mkls.py', 'build.py')) {

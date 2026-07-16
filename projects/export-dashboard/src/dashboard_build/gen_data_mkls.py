@@ -22,6 +22,38 @@ xlsx = os.path.join(HERE, DATA_FILE)
 # 主文件名仍为 260419，其他 Tab(中汽协/海关) 仍按文件名解析 → 2026-04-19
 DATA_FILE_DATE = os.environ.get('DASHBOARD_DATA_FILE_DATE', '2026-06-27')
 df = pd.read_excel(xlsx, sheet_name='mkls-CV')
+
+def apply_mkls_month_cap(frame):
+    """Optionally cap one MKLS calendar year to month 1..N."""
+    max_month_raw = os.environ.get('DASHBOARD_MKLS_MAX_MONTH')
+    if not max_month_raw:
+        return frame
+
+    try:
+        max_month = int(max_month_raw)
+    except ValueError as exc:
+        raise ValueError('DASHBOARD_MKLS_MAX_MONTH must be an integer from 1 to 12') from exc
+    if not 1 <= max_month <= 12:
+        raise ValueError('DASHBOARD_MKLS_MAX_MONTH must be between 1 and 12')
+
+    max_year_raw = os.environ.get('DASHBOARD_MKLS_MAX_YEAR')
+    if max_year_raw:
+        try:
+            max_year = int(max_year_raw)
+        except ValueError as exc:
+            raise ValueError('DASHBOARD_MKLS_MAX_YEAR must be an integer year') from exc
+    else:
+        max_year = int(pd.to_numeric(frame['年'], errors='coerce').max())
+
+    years = pd.to_numeric(frame['年'], errors='coerce')
+    months = pd.to_numeric(frame['月'], errors='coerce')
+    keep = ~((years == max_year) & (months > max_month))
+    capped = frame.loc[keep].copy()
+    removed = len(frame) - len(capped)
+    print(f'MKLS month cap: {max_year} M1-M{max_month}, removed {removed} rows')
+    return capped
+
+df = apply_mkls_month_cap(df)
 # 保险过滤（sheet 本身已过滤，以防手工编辑引入异常）
 df = df[(df['标准车种']=='轻型车') & (df['国家/地区']!='中国')].copy()
 print(f'轻型车（海外）: {len(df)} long rows')

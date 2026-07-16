@@ -4,7 +4,7 @@
 
 1. Save raw MKLS and customs files outside the repository.
 2. Copy the master workbook to a dated working file; never write into the only source copy.
-3. Run `refresh-master-data.ps1` without `-Writeback`.
+3. Run `refresh-master-data.ps1` without `-Writeback` on Windows.
 4. Review the generated report. Stop if its status is `blocked_unmatched`.
 5. Add reviewed corrections to `config/mappings/`, record the reason and effective period, then rerun validation.
 6. Only after the report is clean, rerun with `-Writeback` against the working workbook.
@@ -13,10 +13,14 @@
 ## 2. Build and deploy the dashboard
 
 1. Use only the approved master workbook from step 1.
-2. Run `build-dashboard.ps1`. It writes ignored aggregate JSON files and copies the generated HTML to `web/public/dashboard.html`.
+2. Run `build-dashboard.ps1` on Windows or `build-dashboard-mac.sh` on macOS. It writes ignored aggregate JSON files and copies the generated HTML to `web/public/dashboard.html`.
 3. Check the generated HTML size and manually sample each of the three dashboard tabs against the workbook.
-4. Confirm Vercel environment variables and project linkage, then run `deploy-dashboard.ps1`.
-5. Verify the production login page, all three data tabs, the displayed data date, and the refreshed dashboard content.
+4. If MKLS should stay on a partial-year cut, pass the cap explicitly. For the 2026M1-M5 deployment, use `-MklsMaxYear 2026 -MklsMaxMonth 5` on Windows or `--mkls-max-year 2026 --mkls-max-month 5` on macOS.
+5. Confirm Vercel environment variables and project linkage, then run `deploy-dashboard.ps1` or `deploy-dashboard-mac.sh`.
+6. Verify the production login page, all three data tabs, the displayed data date, and the refreshed dashboard content.
+
+macOS is supported for building and deploying from an approved master workbook.
+Workbook writeback and Excel COM helpers remain Windows-only.
 
 ## 3. Add, disable, or review a user
 

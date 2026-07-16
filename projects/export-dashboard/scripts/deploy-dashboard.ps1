@@ -1,6 +1,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$DataWorkbook,
   [string]$DataFileDate,
+  [int]$MklsMaxYear,
+  [int]$MklsMaxMonth,
   [string]$Scope
 )
 
@@ -8,6 +10,8 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $buildArgs = @("-DataWorkbook", $DataWorkbook)
 if ($DataFileDate) { $buildArgs += @("-DataFileDate", $DataFileDate) }
+if ($MklsMaxYear) { $buildArgs += @("-MklsMaxYear", $MklsMaxYear) }
+if ($MklsMaxMonth) { $buildArgs += @("-MklsMaxMonth", $MklsMaxMonth) }
 & (Join-Path $PSScriptRoot "build-dashboard.ps1") @buildArgs
 
 $vercel = Get-Command vercel -ErrorAction SilentlyContinue
