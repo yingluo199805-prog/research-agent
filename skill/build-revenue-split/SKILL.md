@@ -27,11 +27,16 @@ H 股不要只按上市地套规则。先从年报"编制基准/遵例声明/会
 - **HKFRS/IFRS 原生**（如吉利、零跑）：读 `references/h_share_revenue_split_rules.md`，用按性质披露的员工福利、折旧摊销、融资成本、所得税等直接填桶。
 - **US GAAP 主报表**（如蔚来、理想、小鹏 2024 年报）：默认用 US GAAP 主报表，IFRS 对账只作审阅/可选调整；员工薪酬先找完整 employee compensation/payroll，再找固定提存/社保/公积金等法定福利，并与股份支付合并为"已披露员工薪酬"；不用现金流硬凑，供应商 residual 吸收未拆人工。
 
-已固化的 H 股试点：
+已固化的 H 股公司：
 
 ```bash
-python3 scripts/run_h_share_batch.py 吉利 小鹏 理想 零跑
+python3 run_h_share_batch.py 吉利 小鹏 理想 零跑 小米     # 小米=2018-2025 八年，IFRS，含投资公允价值变动/优先股公允价值变动特殊桶
 ```
+
+**年报获取与文本层**：港交所披露易的标题检索接口可直接列出某只股票全部「年度報告」直链——
+`https://www1.hkexnews.hk/search/titleSearchServlet.do?...&stockId=<内部id>&t1code=40000&t2code=40100&lang=ZH`（内部 id 从
+`https://www1.hkexnews.hk/ncms/script/eds/activestock_sehk_c.json` 按股票代码查），`lang=EN` 取英文版。部分港股中文 PDF（小米 2020、2023-2025）
+字体无 Unicode 映射、文本层乱码，**读数改用英文版同页**（数字一致），截图底稿也用英文版；先用 PyMuPDF 抽一页看是否乱码再决定。
 
 新增 H 股公司时，在 `scripts/run_h_share_batch.py` 复制吉利配置，补 `src_rows`、`note_rows`、`note_data`、单位换算；生成器为 `scripts/gen_h_share_revenue_split.py`。
 
