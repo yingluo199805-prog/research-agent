@@ -38,7 +38,7 @@ Python 3.9 + openpyxl + PyMuPDF + formulas。无 Excel COM / LibreOffice / pdfto
 | 2 | 附注地图：锚定最新年报，列编号标题→页码；抽 IS/BS/CF + 11 组附注页文本 | `engines/notes-analysis/scripts/dump_note_pages.py`（港股 `references/hk_extract_recipe.md` 有整套关键词） | `研究底稿/_text/` |
 | 3 | 读数填两份 JSON：收入分配 `revenue_split.json`（港股：note_data 按年；A 股：src_rows/fy_map）、附注 `notes_spec.json`（PP&E/无形/研发/补助）+ 五张表的备注 | 手工（分析师价值所在） | 两份 JSON |
 | 4 | 写 `研究底稿/digao_spec.json`（每科目每年页码） | 手工 | spec |
-| 5 | 一键：收入分配 → 底稿截图 → 附注五表合并 → 重算自检 → 验收清单 | `scripts/run_breakdown.py company.json` | 合并版工作簿 + 底稿 |
+| 5 | 一键：收入分配 → 底稿截图 → 附注五表合并 → 重算自检 → 回写缓存值（预览可见） → 验收清单 | `scripts/run_breakdown.py company.json` | 合并版工作簿 + 底稿 |
 | 6 | 自检收口：校验行非零必须能在备注点名；抽样 3 数对底稿；比率区间体检 | 看 recalc 输出 + 备注 | — |
 | 7 | 交付摘要 + 更新 `references/companies.md` 登记 | 手工 | — |
 
@@ -64,6 +64,7 @@ A 股与港股的口径差异（类别、净值滚动、在建工程位置、研
 - 递延收入滚动对不平（零跑 2024）是真实的信息，放"其他变动"行并点名，不要硬调。
 - 上市年一次性股份支付（小米 2018 年 124 亿）会把员工桶顶高，备注必须说。
 - 来源列文字不能以"="开头；空格写 0 或 None，不写空串。
+- openpyxl 生成的工作簿没有公式缓存值，手机/网页预览会显示为空——驱动最后一步 `embed_cached_values.py` 把 formulas 重算结果回写成缓存值，交付前必须跑。
 
 ## 目录
 

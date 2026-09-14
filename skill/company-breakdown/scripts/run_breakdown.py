@@ -88,6 +88,8 @@ def main():
             run([sys.executable, os.path.join(NA, "build_hk_notes_model.py"), ns_path], NA)
         # ④ 自检
         out = run([sys.executable, os.path.join(NA, "recalc_check.py"), combined, "--sheets", "固定资产,在建工程,无形资产,资本化研发,政府补助分析"], NA)
+        # ⑤ 把重算结果回写成缓存值（预览/手机端可见），公式与样式保留
+        run([sys.executable, os.path.join(NA, "embed_cached_values.py"), combined], NA)
         errs = [l for l in out.splitlines() if l.startswith("公式错误") and not l.startswith("公式错误: 0")]
         blanks = [l for l in out.splitlines() if l.startswith("预测列有公式但算不出值") and not l.startswith("预测列有公式但算不出值: 0")]
         nonzero = [l for l in out.splitlines() if "<-- 非零" in l]
