@@ -9,7 +9,7 @@
 import sys, re, os
 import fitz
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "build-revenue-split", "scripts"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "revenue-split", "scripts"))
 from pdf_text import _layout_text_fitz
 
 MARK = ["期初", "期末", "年初", "年末", "累計", "累计", "賬面", "账面", "添置", "增加", "減少", "转入", "轉入", "撥備", "折舊", "攤銷"]

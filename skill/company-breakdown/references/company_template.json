@@ -1,0 +1,41 @@
+{
+ "_说明": "一家公司三份 JSON 的模板与字段说明。company.json 是驱动入口；revenue_split.json / notes_spec.json 分别喂两个引擎。示例见 outputs/小米/、outputs/零跑/、outputs/华域汽车/（A股收入分配）。",
+
+ "company.json": {
+  "company": "小米集团", "short": "小米", "market": "H",
+  "revenue_split": {"engine": "h_share", "config": "revenue_split.json"},
+  "notes_spec": "notes_spec.json",
+  "digao_spec": "研究底稿/digao_spec.json",
+  "combined_output": "小米_财报拆分_2018-2025.xlsx"
+ },
+
+ "revenue_split_h_share (revenue_split.json, 港股)": {
+  "outfile": "小米H股.xlsx  ← 相对 REVENUE_SPLIT_BASE",
+  "title": "小米集团收入分配拆分", "sheet_name": "收入分配拆分", "src_sheet": "小米三表", "note_sheet": "小米附注底稿",
+  "note_title": "表：小米附注底稿（IFRS按性质披露；当年原始披露口径）",
+  "years": [2018, 2025], "src_unit_div": 100, "note_unit_div": 100, "note_unit_label": "单位：人民币百万元；IFRS列报",
+  "src_rows": {"收入": 4, "所得税": 16, "归母净利润": 17, "少数股东损益": 18},
+  "derive": true,
+  "note_data": {"2025": {"收入": 0, "销售成本": 0, "销售费用": 0, "管理费用": 0, "研发成本": 0, "减值": 0, "公允价值变动": 0, "联营": 0, "其他收入": 0, "其他收益": 0, "优先股公允": 0, "融资收入": 0, "融资成本": 0, "所得税": 0, "归母净利润": 0, "少数股东损益": 0, "员工合计": 0, "股份支付": 0, "折旧": 0, "无形资产摊销": 0, "使用权资产折旧": 0, "土地摊销": 0, "售后": 0}},
+  "note_rows": "见 outputs/小米/revenue_split.json：section/label+key/blank/note 四种行；key 必须在 note_data 里",
+  "operating_items": [["—按公允价值计入损益之投资公允价值变动", "公允价值变动", "note"], ["—分占按权益法入账之投资损益", "联营", "note"], ["—其他收入", "其他收入", "note"], ["—其他收益/（亏损）净额", "其他收益", "note"], ["—财务收入", "融资收入", "note"]],
+  "business_mode": "functional_residual",
+  "business_items": [["—研发开支", "研发成本"], ["—销售及推广开支", "销售费用"], ["—行政开支", "管理费用"]],
+  "business_remark": "估算=研发开支+销售及推广开支+行政开支-员工薪酬-折旧-摊销，下限为0",
+  "employee_items": [["—其中：以股份为基础的薪酬开支", "股份支付"]],
+  "amort_items": [["—无形资产摊销", "无形资产摊销"], ["—土地使用权摊销", "土地摊销"]],
+  "warranty_note": "保修开支（按性质披露）",
+  "_口径": "derive=true 时引擎自动算 摊销合计/业务费用第三方/其他收入及收益/毛利/经营利润/税前利润；US GAAP 主报表公司（蔚来/理想/小鹏）员工薪酬按已披露部分，见 engines/revenue-split/references/h_share_revenue_split_rules.md"
+ },
+
+ "revenue_split_a_share (revenue_split.json, A股)": {
+  "prefix": "hy", "folder": "华域汽车2015-2025年报", "src_sheet": "华域汽车三表", "outfile": "华域汽车A股.xlsx",
+  "title": "华域汽车收入分配拆分", "years": [2015, 2025],
+  "fy_map": {"2016-03-24": 2015, "…": "年报文件名日期前缀 → 财年"},
+  "warranty_in_cogs": [], "warranty_vals": {}, "headcount": "auto",
+  "src_rows": "detect_src_rows.py 输出：营业总收入/营业收入/营业成本/税金及附加/研发费用/财务费用/…/应付职工薪酬/支付职工现金/固定资产折旧/…",
+  "_前置": "先 combine_three_statements.py <三表文件夹> <XX三表> <XXA股.xlsx>；有金融子公司加 利息支出/手续费及佣金支出/汇兑收益/净敞口套期损益"
+ },
+
+ "notes_spec (notes_spec.json)": "字段与示例见 engines/notes-analysis/scripts/build_hk_notes_model.py 末尾 SPEC_DOC 及 outputs/小米/notes_spec.json（含 other_nbv / reclass_cost / reclass_acc / other_income_other 的用法）。merge_into 与 output 由 run_breakdown.py 自动写入。"
+}

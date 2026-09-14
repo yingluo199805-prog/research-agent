@@ -751,16 +751,65 @@ COMPANIES = {
 }
 
 
-def build_company(name):
-    cfg = COMPANIES[name]()
+def _tuplize(cfg):
+    """JSON 里的 [label, key, ...] 列表转回 tuple；note_data 年份键转 int。"""
+    for k in ("operating_items", "business_items", "business_reference_items", "employee_items", "amort_items"):
+        if k in cfg:
+            cfg[k] = [tuple(x) for x in cfg[k]]
+    if "note_data" in cfg:
+        cfg["note_data"] = {int(y): v for y, v in cfg["note_data"].items()}
+    if "years" in cfg:
+        cfg["years"] = [int(y) for y in cfg["years"]]
+    return cfg
+
+
+def cfg_from_json(path):
+    """从 JSON 读一家港股公司的完整配置（字段与 *_cfg() 返回的 dict 相同；outfile 相对 BASE）。
+    JSON 里可选 "derive": true → 按小米/零跑口径自动补 摊销合计/业务费用第三方/其他收入及收益/毛利/经营利润/税前利润。"""
+    import json
+    cfg = _tuplize(json.load(open(path, encoding="utf-8")))
+    if not os.path.isabs(cfg["outfile"]):
+        cfg["outfile"] = os.path.join(BASE, cfg["outfile"])
+    if cfg.get("derive", True):
+        for d in cfg["note_data"].values():
+            d.setdefault("土地摊销", 0); d.setdefault("减值", 0); d.setdefault("公允价值变动", 0); d.setdefault("优先股公允", 0)
+            d.setdefault("会计准则", cfg.get("standard", "HKFRS/IFRS"))
+            d["摊销合计"] = d["无形资产摊销"] + d["土地摊销"]
+            d["业务费用第三方"] = max(d["研发成本"] + d["销售费用"] + d["管理费用"] - d["员工合计"] - d["折旧"] - d["摊销合计"], 0)
+            d["其他收入及收益"] = d["其他收入"] + d["其他收益"] + d["联营"] + d["公允价值变动"] + d["减值"]
+            d["毛利"] = d["收入"] - d["销售成本"]
+            d["经营利润"] = d["毛利"] - d["销售费用"] - d["管理费用"] - d["研发成本"] + d["其他收入及收益"]
+            d["税前利润"] = d["经营利润"] + d["融资收入"] - d["融资成本"] + d["优先股公允"]
+    ensure_static_source_workbook(cfg["outfile"], cfg["src_sheet"], cfg["years"], cfg["note_data"])
+    return cfg
+
+
+def build_company(name_or_cfg):
+    cfg = name_or_cfg if isinstance(name_or_cfg, dict) else COMPANIES[name_or_cfg]()
     wb = openpyxl.load_workbook(cfg["outfile"])
     build_h_share(wb, cfg)
     wb.save(cfg["outfile"])
     return cfg["outfile"]
 
 
+def export_cfg_json(name, path):
+    """把代码里固化的配置导出为 JSON（供新公司复制改数）。"""
+    import json
+    cfg = COMPANIES[name]()
+    out = {k: v for k, v in cfg.items() if k not in ("note_rows",)} | {"note_rows": cfg["note_rows"]}
+    out["outfile"] = os.path.basename(cfg["outfile"])
+    out["derive"] = False
+    json.dump(out, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1, default=list)
+    return path
+
+
 if __name__ == "__main__":
-    todo = sys.argv[1:] or list(COMPANIES)
+    args = sys.argv[1:]
+    if "--export" in args:            # python3 run_h_share_batch.py --export 小米 out.json
+        i = args.index("--export"); print("exported", export_cfg_json(args[i + 1], args[i + 2])); sys.exit(0)
+    if "--config" in args:            # python3 run_h_share_batch.py --config revenue_split.json
+        i = args.index("--config"); cfg = cfg_from_json(args[i + 1]); print(f"{cfg['title']}: rebuilt {build_company(cfg)}"); sys.exit(0)
+    todo = args or list(COMPANIES)
     for name in todo:
         out = build_company(name)
         print(f"{name}: rebuilt {out}")

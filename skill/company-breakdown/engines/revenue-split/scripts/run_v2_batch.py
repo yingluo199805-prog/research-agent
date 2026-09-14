@@ -122,10 +122,26 @@ COMPANIES = {
      '支付职工现金':166,'固定资产折旧':208,'使用权资产折旧':209,'无形资产摊销':210,'长期待摊费用摊销':211}),
 }
 
+def cfg_from_json(path):
+    """A 股一家公司的配置 JSON（字段同 COMPANIES 里一条：prefix/folder/src_sheet/outfile/title/years/fy_map/warranty_in_cogs/warranty_vals/headcount/src_rows）。"""
+    import json
+    c = json.load(open(path, encoding="utf-8"))
+    c["years"] = [int(y) for y in c["years"]]
+    c["warranty_vals"] = {int(k): v for k, v in c.get("warranty_vals", {}).items()}
+    c.setdefault("warranty_in_cogs", []); c.setdefault("headcount", "auto")
+    return c
+
+
 if __name__ == '__main__':
-    todo = sys.argv[1:] or list(COMPANIES)
-    for name in todo:
-        c = dict(COMPANIES[name])
+    if "--export" in sys.argv:        # python3 run_v2_batch.py --export 华域汽车 out.json
+        import json
+        i = sys.argv.index("--export"); json.dump(COMPANIES[sys.argv[i + 1]], open(sys.argv[i + 2], "w", encoding="utf-8"), ensure_ascii=False, indent=1); print("exported", sys.argv[i + 2]); sys.exit(0)
+    if "--config" in sys.argv:        # python3 run_v2_batch.py --config revenue_split.json
+        i = sys.argv.index("--config"); todo = [cfg_from_json(sys.argv[i + 1])]
+    else:
+        todo = [dict(COMPANIES[n]) for n in (sys.argv[1:] or list(COMPANIES))]
+    for c in todo:
+        name = c["title"]
         convert(c['prefix'], c['folder'], c['fy_map'])
         if c.get('headcount') == 'auto':
             c['headcount'] = auto_headcount(c['prefix'], c['years'])  # 母公司口径年份自动剔除

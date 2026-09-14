@@ -35,7 +35,7 @@
 一条命令，全自动：
 
 ```bash
-cd skill/build-revenue-split/scripts
+cd skill/company-breakdown/engines/revenue-split/scripts
 python3 run_v2_batch.py 华域汽车    # 单家
 python3 run_v2_batch.py             # 全部 10 家
 ```
@@ -103,7 +103,7 @@ H 股不是一个单一会计口径，先判准则：
 已固化试点：
 
 ```bash
-cd skill/build-revenue-split/scripts
+cd skill/company-breakdown/engines/revenue-split/scripts
 python3 run_h_share_batch.py 吉利 小鹏 理想 零跑     # 同样读 REVENUE_SPLIT_BASE / --base
 ```
 

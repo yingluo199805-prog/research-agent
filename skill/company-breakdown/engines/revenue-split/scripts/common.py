@@ -7,7 +7,7 @@
 import os
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_BASE = os.path.abspath(os.path.join(_HERE, "..", "..", "..", "outputs", "收入分配"))
+_DEFAULT_BASE = os.path.abspath(os.path.join(_HERE, "..", "..", "..", "..", "..", "outputs", "收入分配"))
 
 BASE = os.environ.get("REVENUE_SPLIT_BASE") or _DEFAULT_BASE
 TXT_DIR = os.path.join(BASE, "_年报文本")

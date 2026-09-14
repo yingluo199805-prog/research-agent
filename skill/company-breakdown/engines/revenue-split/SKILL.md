@@ -14,7 +14,7 @@ description: 把比亚迪模型的「收入分配拆分」范式扩展到其他�
 ### 运行环境（本机 macOS，2026-09 起）
 - 只依赖 Python 3.9 + openpyxl + PyMuPDF(fitz)；**不需要 pdftotext / LibreOffice**：年报转文本用 `scripts/pdf_text.py`（有 pdftotext 时自动优先用），勾稽校验用纯 Python 的 `recon_py`（附注合计 vs 三表 / 供应商 residual / 口径残差）。产物公式不带缓存值，Excel 打开时自动计算。
 - **工作根目录**：环境变量 `REVENUE_SPLIT_BASE`，或命令行 `--base <目录>`，默认 `<仓库>/outputs/收入分配`（已 gitignore）。三表导出文件夹、年报文件夹、产物 `XX A股.xlsx` 都放在根目录下；年报文本缓存在 `<根目录>/_年报文本/`。
-- 所有脚本在 `scripts/` 目录下运行：`cd skill/build-revenue-split/scripts`。
+- 所有脚本在 `scripts/` 目录下运行：`cd skill/company-breakdown/engines/revenue-split/scripts`。
 
 ### 你需要先准备的原始数据
 1. **三表**：该公司利润表、资产负债表、现金流量表三个单表（数据端如 iFinD/Choice 导出的 `.xlsx`，"普通报表"），放进根目录下一个文件夹（如 `华域汽车2015-2025三表`）。
