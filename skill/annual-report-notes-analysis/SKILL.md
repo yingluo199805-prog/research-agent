@@ -45,7 +45,26 @@ description: >-
 - **B 年度/中报更新**：已有表追加一年实际值列，预测列右移、比率重锁
 - **C 单表模式**：只做某一张（如只做政府补助），输出独立文件
 
-## 工作流程
+## 运行环境（本机 macOS，2026-09 起）
+
+- 依赖：Python 3.9 + openpyxl + PyMuPDF(fitz) + `formulas`（重算用，已 pip 装）。**没有 Excel COM、没有 LibreOffice、没有 `web-access` 技能**——
+  下载年报用 WebFetch，转文本/截图用 PyMuPDF，重算用 `scripts/recalc_check.py`（formulas 包，产物另存 `_recalc.xlsx`，原文件公式保留）。
+- 默认输出目录：`<仓库>/outputs/{公司}/`（gitignore），截图底稿与年报文本在 `outputs/{公司}/研究底稿/`；年报 PDF 若已在
+  `outputs/收入分配/{公司}年报/`（收入分配表工作集）直接复用，不重复下载。Windows 的 `C:\Users\Lenovo\Desktop\收纳\...` 路径在本机不存在。
+- 港股（HKFRS/IFRS）公司走 `scripts/build_hk_notes_model.py`（数据驱动生成器，见下「港股流程」），A 股仍按 references 规格手工建表。
+
+## 港股流程（零跑 2026-09 已跑通，小米同法）
+
+1. `scripts/dump_note_pages.py <pdf> 物業、廠房及設備 無形資產 其他收入 遞延收入 --span 1 --out ...` 按「编号+标题」抓附注页版面文本，
+   逐年读 PP&E（含在建工程列、折舊按功能、可使用年期）、無形資產（含攤銷按功能）、其他收入·政府補貼、遞延收入、現金流量表「收取的政府補貼」。
+2. 写 `digao_spec.json` → `build_digao.py` 出截图底稿（PP&E/无形/利润表+按性质/其他收入+递延收入+现金流量表页）。
+3. 把数据填进 `notes_spec.json`（字段见 `build_hk_notes_model.py` 末尾 SPEC_DOC；港股附注按净值滚动：成本/累计折旧期末 + 添置/轉讓/出售净值/折舊）
+   并写好五张表的备注（特殊事项、资产画像、校验差异点名——这是分析师价值所在），跑 `build_hk_notes_model.py notes_spec.json`。
+4. `recalc_check.py <xlsx>`：零公式错误、所有校验行=0（非零必须能在备注里点名原因）、比率落在合理区间、预测列无空值。
+5. 港股口径差异已内建：在建工程=PP&E「在建工程」列（无独立附注、无项目/预算）；处置原价由成本滚动倒算；无限年期无形资产摊销率=0；
+   研发多为全费用化（资本化研发表降级为费用化单链）；政府补助只有其他收入/遞延收入/现金流三口径（无非经常性损益、无增值税加计抵减）。
+
+## 工作流程（A 股）
 
 ### 第0步：确认参数
 
@@ -67,15 +86,14 @@ A股/港股年度报告通常在次年 1-4 月披露完毕。判断规则：设�
   做进同一个工作簿** `{公司}_附注科目分析_{起}-{终}.xlsx`，每科目一个 sheet——
   **政府补助不再单独出文件**，和其余四张并在一起（用户偏好，2026-06 起固定）。
   仅当用户明确要求"单独出某张表"时才拆分单文件；
-- **默认输出文件夹**：`C:\Users\Lenovo\Desktop\收纳\01_公司个股\{公司}\深度研究\`
-  （与比亚迪模型同级；公司文件夹不存在就新建 `{公司}\深度研究\`）。
-  截图底稿 `{公司}_年报附注底稿.xlsx` 与下载的年报PDF放同目录下的 `研究底稿\` 子文件夹。
+- **默认输出文件夹**：本机 macOS 为 `<仓库>/outputs/{公司}/`（Windows 机器为 `C:\Users\Lenovo\Desktop\收纳\01_公司个股\{公司}\深度研究\`）。
+  截图底稿 `{公司}_年报附注底稿.xlsx`、年报文本与 spec 放同目录下的 `研究底稿/` 子文件夹；年报 PDF 优先复用 `outputs/收入分配/` 里已有的。
   用户另指定路径时以用户为准。
 - 预测年数：**默认 3 年**（政府补助除外），且预测值要按逻辑先填好（见第3步），不留空给用户。
 
 ### 第1步：下载年报PDF
 
-用 `web-access` 技能联网。优先公司官网投资者关系页；找不到再用巨潮资讯网
+用 WebFetch 联网（本机无 `web-access` 技能）。优先公司官网投资者关系页；找不到再用巨潮资讯网
 （A股，cninfo.com.cn）或港交所披露易（hkexnews.hk）。只需要**年度报告**
 （更新场景加中报）。下载到公司文件夹的研究底稿目录下，文件名保留年份。
 注意：H股公司同时有中文版年报，优先下中文版；附注科目数据在"财务报表附注"章节。
@@ -142,10 +160,9 @@ A股/港股年度报告通常在次年 1-4 月披露完毕。判断规则：设�
 
 重算让公式产生缓存值，否则后面没法读值自检。
 
-**重算方法（按本机可用项选）**：`xlsx` 技能的 `scripts/recalc.py` 依赖 LibreOffice，
-本机（Windows，未装 LibreOffice）跑不了——不要在它身上耗时间。改用以下任一：
-- **Excel COM**（本机装了 Excel，首选）：`win32com.client` 打开→`Application.CalculateFull()`→保存；
-- **formulas 包**（无 Excel 时）：`formulas.ExcelModel().loads().calculate()` 回写。
+**重算方法**：本机 macOS 无 Excel COM、无 LibreOffice，用 `python3 scripts/recalc_check.py <xlsx>`（formulas 包），
+它把重算结果另存为 `<文件>_recalc.xlsx` 并直接打印错误扫描/校验行/比率/预测空值四项自检；原文件公式保留、交付原文件即可（Excel 打开自动算）。
+Windows 机器上仍可用 Excel COM（`win32com.client` → `CalculateFull()`）。
 
 > ⚠️ **铁律：重算并保存必须是对该文件的最后一次写操作。**
 > openpyxl 保存时会丢弃所有公式的缓存值。如果你"先重算、再用 openpyxl 打补丁/改格式"，
