@@ -50,7 +50,7 @@ description: >-
 - 依赖：Python 3.9 + openpyxl + PyMuPDF(fitz) + `formulas`（重算用，已 pip 装）。**没有 Excel COM、没有 LibreOffice、没有 `web-access` 技能**——
   下载年报用 WebFetch，转文本/截图用 PyMuPDF，重算用 `scripts/recalc_check.py`（formulas 包，产物另存 `_recalc.xlsx`，原文件公式保留）。
 - 默认输出目录：`<仓库>/outputs/{公司}/`（gitignore），截图底稿与年报文本在 `outputs/{公司}/研究底稿/`；年报 PDF 若已在
-  `outputs/收入分配/{公司}年报/`（收入分配表工作集）直接复用，不重复下载。Windows 的 `C:\Users\Lenovo\Desktop\收纳\...` 路径在本机不存在。
+  `outputs/收入分配/{公司}年报/`（收入分配表工作集）直接复用，不重复下载。原 Windows 机器上的 `收纳\01_公司个股\{公司}\深度研究\` 目录约定在 macOS 上不适用。
 - 港股（HKFRS/IFRS）公司走 `scripts/build_hk_notes_model.py`（数据驱动生成器，见下「港股流程」），A 股仍按 references 规格手工建表。
 
 ## 港股流程（零跑 2026-09 已跑通，小米同法）
@@ -90,7 +90,7 @@ A股/港股年度报告通常在次年 1-4 月披露完毕。判断规则：设�
   做进同一个工作簿** `{公司}_附注科目分析_{起}-{终}.xlsx`，每科目一个 sheet——
   **政府补助不再单独出文件**，和其余四张并在一起（用户偏好，2026-06 起固定）。
   仅当用户明确要求"单独出某张表"时才拆分单文件；
-- **默认输出文件夹**：本机 macOS 为 `<仓库>/outputs/{公司}/`（Windows 机器为 `C:\Users\Lenovo\Desktop\收纳\01_公司个股\{公司}\深度研究\`）。
+- **默认输出文件夹**：本机 macOS 为 `<仓库>/outputs/{公司}/`（Windows 机器可沿用 `收纳\01_公司个股\{公司}\深度研究\` 目录约定）。
   截图底稿 `{公司}_年报附注底稿.xlsx`、年报文本与 spec 放同目录下的 `研究底稿/` 子文件夹；年报 PDF 优先复用 `outputs/收入分配/` 里已有的。
   用户另指定路径时以用户为准。
 - 预测年数：**默认 3 年**（政府补助除外），且预测值要按逻辑先填好（见第3步），不留空给用户。
