@@ -782,7 +782,7 @@ spec.json（金额单位与年报一致，默认千元；年份键可为字符�
          "bs_nbv": {y: v 含在建工程}, "dep_by_function": {label:{y}}, "useful_life": {cls: "20年"},
          "cip": {"nbv": {y}, "additions": {y}, "transfer_out": {y 正数}, "open_first": {首年: v}}},
  "intangibles": {"note": "附注16", "classes": [...], "cost","accamort","impair","additions","disposal_nbv","amort",
-                 "bs_nbv", "indefinite": [不摊销类别], "amort_by_function": {...}, "combination": {cls:{y}}, "rd_class": 承接开发成本的类别},
+                 "bs_nbv", "indefinite": [不摊销类别], "amort_by_function": {...}, "combination": {cls:{y}}, "rd_class": 承接开发成本的类别, "dev_cost_class": 开发支出类别（不摊销；购置=资本化研发表本年新增，转出=转入 rd_class；奇瑞 資本化開發支出）},
  "rd": {"rd_expense": {y}, "revenue": {y}, "rd_dep": {y}, "rd_amort": {y}, "design_dev": {y}, "capitalized": {y}, "dev_cost_balance": {y},
         "dev_to_intangible": {y}, "rev_growth_fc": {y: 0.2}},
  "grants": {"other_income_grant": {y}, "deferred_amort": {y}, "deferred_end": {y}, "grants_received": {y}, "cf_grants_received": {y},

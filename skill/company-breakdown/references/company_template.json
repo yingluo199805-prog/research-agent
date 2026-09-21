@@ -37,5 +37,5 @@
   "_前置": "先 combine_three_statements.py <三表文件夹> <XX三表> <XXA股.xlsx>；有金融子公司加 利息支出/手续费及佣金支出/汇兑收益/净敞口套期损益"
  },
 
- "notes_spec (notes_spec.json)": "字段与示例见 engines/notes-analysis/scripts/build_hk_notes_model.py 末尾 SPEC_DOC 及 outputs/小米/notes_spec.json（含 other_nbv / reclass_cost / reclass_acc / other_income_other 的用法）。merge_into 与 output 由 run_breakdown.py 自动写入。"
+ "notes_spec (notes_spec.json)": "字段与示例见 engines/notes-analysis/scripts/build_hk_notes_model.py 末尾 SPEC_DOC 及 outputs/小米/notes_spec.json（含 other_nbv / reclass_cost / reclass_acc / other_income_other 的用法）；outputs/奇瑞/notes_spec.json（含 dev_cost_class 研发资本化类别、招股章程取数）。merge_into 与 output 由 run_breakdown.py 自动写入。"
 }
