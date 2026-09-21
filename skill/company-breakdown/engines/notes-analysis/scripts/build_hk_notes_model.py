@@ -206,7 +206,7 @@ def build_cip(wb, S, hist, fc, unit):
     # 五 转固分配
     sh.section("五、CIP→PP&E 转固分配 — 按资产类别（PP&E 附注「轉讓」行）")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(P["transfer_in"][cls], y) for y in hist}, key=f"alloc_{i}")
+        sh.row(cls, note, {y: V(P["transfer_in"].get(cls, {}), y) for y in hist}, key=f"alloc_{i}")
     sh.row("转固合计", None, lambda y: "=" + "+".join(sh.ref(f"alloc_{i}", y) for i in range(len(classes))), key="alloc_tot", total=True)
     sh.row("校验：vs 三.转入固定资产（应=0）", None, lambda y: f"={sh.ref('alloc_tot', y)}+{sh.ref('r_tr', y)}", check=True)
     for i, cls in enumerate(classes):
@@ -262,7 +262,7 @@ def build_ppe(wb, S, hist, fc, unit, cip):
     recl_a = P.get("reclass_acc", {})     # 同上，累计折旧口径
 
     def nbv_h(cls, y):
-        return V(cost[cls], y) - V(acc[cls], y) - V(imp.get(cls, {}), y)
+        return V(cost.get(cls, {}), y) - V(acc.get(cls, {}), y) - V(imp.get(cls, {}), y)
 
     # 一 NBV
     sh.section(f"一、期末账面净值（NBV）— {N} 类汇总（不含在建工程）")
@@ -281,7 +281,7 @@ def build_ppe(wb, S, hist, fc, unit, cip):
     # 二 原价
     sh.section(f"二、期末账面原价（成本）— {N} 类汇总")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(cost[cls], y) for y in hist},
+        sh.row(cls, note, {y: V(cost.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"={sh.ref(f'cost_{i}', sh.prev(y))}+{sh.ref(f'buy_{i}', y)}+{sh.ref(f'cipin_{i}', y)}+{sh.ref(f'oth_{i}', y)}+{sh.ref(f'reclc_{i}', y)}-{sh.ref(f'dispc_{i}', y)}", key=f"cost_{i}")
     sh.row("合计原价", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['cost_0']}:{sh.L(y)}{sh.rows[f'cost_{N-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['cost_0']}:{sh.L(y)}{sh.rows[f'cost_{N-1}']})", key="cost_tot", total=True)
@@ -289,7 +289,7 @@ def build_ppe(wb, S, hist, fc, unit, cip):
     # 三 累计折旧
     sh.section(f"三、累计折旧 期末 — {N} 类汇总")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(acc[cls], y) for y in hist},
+        sh.row(cls, note, {y: V(acc.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"={sh.ref(f'acc_{i}', sh.prev(y))}*(1-{sh.ref(f'a_disp_{i}', y)})+{sh.ref(f'dep_{i}', y)}+{sh.ref(f'recla_{i}', y)}", key=f"acc_{i}")
     sh.row("合计累计折旧", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['acc_0']}:{sh.L(y)}{sh.rows[f'acc_{N-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['acc_0']}:{sh.L(y)}{sh.rows[f'acc_{N-1}']})", key="acc_tot", total=True)
@@ -305,7 +305,7 @@ def build_ppe(wb, S, hist, fc, unit, cip):
     # 五 计提
     sh.section(f"五、本期计提折旧 — {N} 类汇总（附注「折舊費用」行）")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(dep[cls], y) for y in hist},
+        sh.row(cls, note, {y: V(dep.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"=({sh.ref(f'cost_{i}', y)}+{sh.ref(f'cost_{i}', sh.prev(y))})/2*{sh.ref(f'a_rate_{i}', y)}", key=f"dep_{i}")
     sh.row("合计计提折旧", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['dep_0']}:{sh.L(y)}{sh.rows[f'dep_{N-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['dep_0']}:{sh.L(y)}{sh.rows[f'dep_{N-1}']})", key="dep_tot", total=True)
@@ -351,13 +351,13 @@ def build_ppe(wb, S, hist, fc, unit, cip):
                reason="默认 = 近2年隐含折旧率平均；类别结构变化大时可深红手调" if i == 0 else None)
     sh.row("8.4 在建工程转入（历史=附注「轉讓」；预测=在建工程表 7.2）", None, None, None)
     for i, cls in enumerate(classes):
-        sh.row(f"　{cls}", note, {y: V(tr[cls], y) for y in hist},
+        sh.row(f"　{cls}", note, {y: V(tr.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"=在建工程!{cip.L(y)}{cip.rows[f'f_alloc_{i}']}" if cip.rows.get(f"f_alloc_{i}") else 0, key=f"cipin_{i}")
     sh.row("　合计", None, lambda y: "=" + "+".join(sh.ref(f"cipin_{i}", y) for i in range(N)),
            lambda y: "=" + "+".join(sh.ref(f"cipin_{i}", y) for i in range(N)), total=True)
     sh.row("8.5 购置（历史=附注「添置」；预测=上年×(1+8.1)）", None, None, None)
     for i, cls in enumerate(classes):
-        sh.row(f"　{cls}", note, {y: V(add[cls], y) for y in hist},
+        sh.row(f"　{cls}", note, {y: V(add.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"={sh.ref(f'buy_{i}', sh.prev(y))}*(1+{sh.ref(f'a_grow_{i}', y)})", key=f"buy_{i}")
     sh.row("　合计", None, lambda y: "=" + "+".join(sh.ref(f"buy_{i}", y) for i in range(N)),
            lambda y: "=" + "+".join(sh.ref(f"buy_{i}", y) for i in range(N)), total=True)
@@ -370,7 +370,7 @@ def build_ppe(wb, S, hist, fc, unit, cip):
            lambda y: "=" + "+".join(sh.ref(f"dispc_{i}", y) for i in range(N)), total=True)
     sh.row("8.7 附：处置账面净值（附注「出售」行，仅历史；处置原价−此值=处置转出的累计折旧）", None, None, None)
     for i, cls in enumerate(classes):
-        sh.row(f"　{cls}", note, {y: V(disp[cls], y) for y in hist}, key=f"dispn_{i}")
+        sh.row(f"　{cls}", note, {y: V(disp.get(cls, {}), y) for y in hist}, key=f"dispn_{i}")
     sh.row("8.8 其他变动（汇兑差额 / 收购附属公司 / 与投资物业互转，附注净值口径，正=增加；预测=0）", None, None, None)
     for i, cls in enumerate(classes):
         sh.row(f"　{cls}", note, {y: V(oth.get(cls, {}), y) for y in hist}, {y: 0 for y in fc}, key=f"oth_{i}", fc_color=BLACK)
@@ -420,8 +420,11 @@ def build_rd(wb, S, hist, fc, unit):
     sh.row("资本化研发支出（開發成本添置）", note or "無形資產附注", {y: V(R.get("capitalized", {}), y) for y in hist},
            lambda y: f"={sh.ref('total', y)}*{sh.ref('a_caprate', y)}", key="cap")
     sh.row("合计核对（=费用化+资本化）", None, lambda y: f"={sh.ref('exp', y)}+{sh.ref('cap', y)}", lambda y: f"={sh.ref('rd', y)}", key="total", total=True)
-    sh.row("资本化率", None, lambda y: f'=IFERROR({sh.ref("cap", y)}/{sh.ref("total", y)},"")', {y: 0 for y in fc}, key="a_caprate", fmt=PCT1,
-           reason="深红可调；公司政策为开发支出全部费用化时默认 0%")
+    _cr = [V(R.get("capitalized", {}), y) / (V(R["rd_expense"], y) + V(R.get("capitalized", {}), y)) for y in hist[-2:]
+           if V(R["rd_expense"], y) + V(R.get("capitalized", {}), y) > 0 and V(R.get("capitalized", {}), y) > 0]
+    cap_fc = round(sum(_cr) / len(_cr), 4) if _cr else 0
+    sh.row("资本化率", None, lambda y: f'=IFERROR({sh.ref("cap", y)}/{sh.ref("total", y)},"")', {y: cap_fc for y in fc}, key="a_caprate", fmt=PCT1,
+           reason=(f"深红可调；默认取近两年平均 {cap_fc:.1%}" if _cr else "深红可调；公司政策为开发支出全部费用化时默认 0%"))
     sh.blank()
     sh.section("三、開發成本（资产负债表科目）— 按项目")
     sh.row("開發成本期末余额（年报无此科目）", note or "無形資產附注", {y: V(R.get("dev_cost_balance", {}), y) for y in hist}, key="dc")
@@ -465,6 +468,9 @@ def build_rd(wb, S, hist, fc, unit):
 def build_intangibles(wb, S, hist, fc, unit, rd):
     I = S["intangibles"]; classes = I["classes"]; M = len(classes); note = I.get("note", "無形資產附注")
     indefinite = set(I.get("indefinite", []))
+    dev_cls = I.get("dev_cost_class")          # 开发支出类别（港股常见：資本化開發支出 / 開發成本），不摊销，与资本化研发表三-2 联动
+    rd_cls = I.get("rd_class")
+    no_amort = set(indefinite) | ({dev_cls} if dev_cls else set())
     sh = Sheet(wb, "无形资产", hist, fc, unit)
     sh.header(f"{note} 无形资产 — {M} 类完整勾稽 ({hist[0]}-{fc[-1] if fc else hist[-1]})",
               f"单位：{unit} ｜ 颜色：深蓝=年报实际 ｜ 深红=可调假设 ｜ 黑=公式 ｜ 黄底=合计 ｜ 绿底=校验",
@@ -474,7 +480,7 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
     n2 = hist[-2:]; n3 = hist[-3:]
     sh.section(f"一、期末账面净值（NBV）— {M} 类汇总")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(cost[cls], y) - V(acc[cls], y) - V(imp.get(cls, {}), y) for y in hist},
+        sh.row(cls, note, {y: V(cost.get(cls, {}), y) - V(acc.get(cls, {}), y) - V(imp.get(cls, {}), y) for y in hist},
                lambda y, i=i: f"={sh.ref(f'cost_{i}', y)}-{sh.ref(f'acc_{i}', y)}-{sh.ref(f'imp_{i}', y)}", key=f"nbv_{i}")
     sh.row("合计 NBV", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['nbv_0']}:{sh.L(y)}{sh.rows[f'nbv_{M-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['nbv_0']}:{sh.L(y)}{sh.rows[f'nbv_{M-1}']})", key="nbv_tot", total=True)
@@ -483,13 +489,13 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
     sh.blank()
     sh.section(f"二、期末账面原值 — {M} 类汇总（预测引用十.原价滚动表）")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(cost[cls], y) for y in hist}, lambda y, i=i: f"={sh.ref(f'rc_end_{i}', y)}", key=f"cost_{i}")
+        sh.row(cls, note, {y: V(cost.get(cls, {}), y) for y in hist}, lambda y, i=i: f"={sh.ref(f'rc_end_{i}', y)}", key=f"cost_{i}")
     sh.row("合计原价", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['cost_0']}:{sh.L(y)}{sh.rows[f'cost_{M-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['cost_0']}:{sh.L(y)}{sh.rows[f'cost_{M-1}']})", key="cost_tot", total=True)
     sh.blank()
     sh.section(f"三、期末累计摊销 — {M} 类汇总（预测引用十一.滚动表）")
     for i, cls in enumerate(classes):
-        sh.row(cls, note, {y: V(acc[cls], y) for y in hist}, lambda y, i=i: f"={sh.ref(f'ra_end_{i}', y)}", key=f"acc_{i}")
+        sh.row(cls, note, {y: V(acc.get(cls, {}), y) for y in hist}, lambda y, i=i: f"={sh.ref(f'ra_end_{i}', y)}", key=f"acc_{i}")
     sh.row("合计累计摊销", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['acc_0']}:{sh.L(y)}{sh.rows[f'acc_{M-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['acc_0']}:{sh.L(y)}{sh.rows[f'acc_{M-1}']})", key="acc_tot", total=True)
     sh.blank()
@@ -501,13 +507,13 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
     sh.blank()
     sh.section(f"五、本期计提摊销 — {M} 类汇总（附注「攤銷費用」行）")
     for i, cls in enumerate(classes):
-        if cls in indefinite:
+        if cls in no_amort:
             f = lambda y, i=i: 0
         else:
             f = lambda y, i=i: (f"=MIN(({sh.ref(f'cost_{i}', y)}+{sh.ref(f'cost_{i}', sh.prev(y))})/2*{sh.ref(f'a_rate_{i}', y)},"
                                 f"MAX(0,{sh.ref(f'nbv_{i}', sh.prev(y))}+({sh.ref(f'cost_{i}', y)}-{sh.ref(f'cost_{i}', sh.prev(y))})"
                                 f"-({sh.ref(f'imp_{i}', y)}-{sh.ref(f'imp_{i}', sh.prev(y))})))")
-        sh.row(cls, note, {y: V(am[cls], y) for y in hist}, f, key=f"am_{i}")
+        sh.row(cls, note, {y: V(am.get(cls, {}), y) for y in hist}, f, key=f"am_{i}")
     sh.row("合计计提摊销", None, lambda y: f"=SUM({sh.L(y)}{sh.rows['am_0']}:{sh.L(y)}{sh.rows[f'am_{M-1}']})",
            lambda y: f"=SUM({sh.L(y)}{sh.rows['am_0']}:{sh.L(y)}{sh.rows[f'am_{M-1}']})", key="am_tot", total=True)
     abf = I.get("amort_by_function", {})
@@ -528,7 +534,15 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
     sh.row("整体新旧度", "老化指标", lambda y: f'=IFERROR({sh.ref("acc_tot", y)}/{sh.ref("cost_tot", y)},"")',
            lambda y: f'=IFERROR({sh.ref("acc_tot", y)}/{sh.ref("cost_tot", y)},"")', fmt=PCT1)
     sh.blank()
-    sh.section("八、内部研发形成的无形资产占比 — 年报未披露（公司无資本化開發成本），本节省略")
+    rd_like = [i for i, c in enumerate(classes) if c in (rd_cls, dev_cls)]
+    if rd_like:
+        sh.section("八、内部研发形成的无形资产占比（净值口径：研发相关类别 ÷ 无形资产合计）")
+        for i in rd_like:
+            sh.row(f"　{classes[i]} 净值", "=一", lambda y, i=i: f"={sh.ref(f'nbv_{i}', y)}", lambda y, i=i: f"={sh.ref(f'nbv_{i}', y)}", key=f"rdnbv_{i}")
+        sh.row("内部研发形成占比", None, lambda y: "=IFERROR((" + "+".join(sh.ref(f"rdnbv_{i}", y) for i in rd_like) + f')/{sh.ref("nbv_tot", y)},"")',
+               lambda y: "=IFERROR((" + "+".join(sh.ref(f"rdnbv_{i}", y) for i in rd_like) + f')/{sh.ref("nbv_tot", y)},"")', fmt=PCT1)
+    else:
+        sh.section("八、内部研发形成的无形资产占比 — 年报未披露（公司无資本化開發成本），本节省略")
     sh.blank()
     sh.section("九、预测假设输入（深红色为可调）")
     sh.row("9.1 购置增长率（历史=购置YoY反推）", None, None, None)
@@ -538,24 +552,32 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
                {y: 0 for y in fc}, key=f"a_grow_{i}", fmt=PCT1, reason="默认 0%" if i == 0 else None)
     sh.row(f"9.2 摊销率（默认锁定 {n2[0]}-{n2[-1]} 平均；无限年期类别=0）", None, None, None)
     for i, cls in enumerate(classes):
-        if cls in indefinite:
-            sh.row(f"　{cls}", None, None, {y: 0 for y in fc}, key=f"a_rate_{i}", fmt=PCT2, reason="无限可使用年期，不摊销，每年做减值测试")
+        if cls in no_amort:
+            sh.row(f"　{cls}", None, None, {y: 0 for y in fc}, key=f"a_rate_{i}", fmt=PCT2,
+                   reason="无限可使用年期，不摊销，每年做减值测试" if cls in indefinite else "开发支出：达到可使用状态转入专利后才摊销，本类不摊销")
         else:
             sh.row(f"　{cls}", None, None, {y: f"=AVERAGE({sh.L(n2[0])}{{rate}}:{sh.L(n2[-1])}{{rate}})" for y in fc}, key=f"a_rate_{i}", fmt=PCT2)
     sh.row("9.3 内部研发资本化转入（联动资本化研发表三-2「转入无形资产」）", None, None, None)
     rd_cls = I.get("rd_class")
     for i, cls in enumerate(classes):
         if cls == rd_cls:
-            sh.row(f"　{cls}", "资本化研发!三-2", {y: V(I.get("rd_capitalized", {}).get(cls, {}), y) for y in hist},
+            sh.row(f"　{cls}", "资本化研发!三-2 转入", {y: V(I.get("rd_capitalized", {}).get(cls, {}), y) for y in hist},
                    lambda y: f"=-资本化研发!{rd.L(y)}{rd.rows['dc_tr']}", key=f"rdin_{i}")
+        elif cls == dev_cls:
+            sh.row(f"　{cls}（转出至{rd_cls or '专利'}，负数）", "资本化研发!三-2 转出", {y: -V(I.get("rd_capitalized", {}).get(rd_cls, {}), y) for y in hist},
+                   lambda y: f"=资本化研发!{rd.L(y)}{rd.rows['dc_tr']}", key=f"rdin_{i}")
         else:
             sh.row(f"　{cls}", None, {y: 0 for y in hist}, {y: 0 for y in fc}, key=f"rdin_{i}", hist_color=BLACK, fc_color=BLACK)
     sh.row("　合计内部研发资本化", None, lambda y: "=" + "+".join(sh.ref(f"rdin_{i}", y) for i in range(M)),
            lambda y: "=" + "+".join(sh.ref(f"rdin_{i}", y) for i in range(M)), total=True)
-    sh.row("9.4 购置（历史=附注「添置」；预测=上年×(1+9.1)）", None, None, None)
+    sh.row("9.4 购置（历史=附注「添置」；预测=上年×(1+9.1)；开发支出类别预测=资本化研发表本年新增）", None, None, None)
     for i, cls in enumerate(classes):
-        sh.row(f"　{cls}", note, {y: V(add[cls], y) for y in hist},
-               lambda y, i=i: f"={sh.ref(f'buy_{i}', sh.prev(y))}*(1+{sh.ref(f'a_grow_{i}', y)})", key=f"buy_{i}")
+        if cls == dev_cls:
+            sh.row(f"　{cls}（=当年资本化研发支出）", note, {y: V(add.get(cls, {}), y) for y in hist},
+                   lambda y: f"=资本化研发!{rd.L(y)}{rd.rows['dc_add']}", key=f"buy_{i}")
+        else:
+            sh.row(f"　{cls}", note, {y: V(add.get(cls, {}), y) for y in hist},
+                   lambda y, i=i: f"={sh.ref(f'buy_{i}', sh.prev(y))}*(1+{sh.ref(f'a_grow_{i}', y)})", key=f"buy_{i}")
     sh.row("9.5 处置原价（历史=期初+购置+研发转入+合并+汇兑−期末 倒算；预测=近3年平均）", None, None, None)
     cof = I.get("cost_open_first", {})
     for i, cls in enumerate(classes):
@@ -622,9 +644,10 @@ def build_intangibles(wb, S, hist, fc, unit, rd):
 
 def build_grants(wb, S, hist, unit, company):
     G = S["grants"]
+    to_yi = S.get("unit_to_yi") or {"元": 100000000, "千元": 100000, "万元": 10000, "百万元": 100, "百萬元": 100, "亿元": 1}.get(unit, 100000)
     sh = Sheet(wb, "政府补助分析", hist, [], unit)
     sh.header(f"{company} 政府补助全景分析 ({hist[0]}-{hist[-1]})",
-              f"单位：{unit}（汇总区为亿元） ｜ 数据来源：各年度年报附注（其他收入 / 遞延收入 / 合併現金流量表） ｜ 制表：广发汽车",
+              f"单位：{unit}（汇总区为亿元，÷{to_yi}） ｜ 数据来源：各年度年报附注（其他收入 / 遞延收入 / 合併現金流量表） ｜ 制表：广发汽车",
               "港股口径：计入损益的政府补贴全部在「其他收入」；与资产相关部分先入「遞延收入」再按资产年期摊销转入其他收入；无营业外收入/非经常性损益口径")
     h0 = hist[0]
     oi = G["other_income_grant"]; da = G.get("deferred_amort", {}); de = G["deferred_end"]; rec = G.get("grants_received", {}); cf = G.get("cf_grants_received", rec)
@@ -636,7 +659,7 @@ def build_grants(wb, S, hist, unit, company):
                      ("s_asset", "　其中：与资产相关（递延收入摊销）"), ("s_inc", "　其中：与收益相关（当期直接计入）"),
                      ("s_de", "递延收入期末余额"), ("s_new", "　当年新增（收到，与资产相关）"), ("s_out", "　当年转出（摊销）"),
                      ("s_cf", "政府补助现金流入（投资活动·收購非流動資產收取的政府補貼）")]:
-        sum_rows[key] = sh.row(lab, "=明细区/100000", None, None, key=key, fmt="0.00")
+        sum_rows[key] = sh.row(lab, f"=明细区/{to_yi}", None, None, key=key, fmt="0.00")
     sh.blank()
     sh.section(f"一、其他收入拆分（{unit}）")
     sh.row("与日常活动相关的政府补贴（其他收入）", "附注 其他收入", {y: V(oi, y) for y in hist}, key="oi")
@@ -685,7 +708,7 @@ def build_grants(wb, S, hist, unit, company):
     link = {"s_oi": "oi_tot", "s_pl": "pl_tot", "s_asset": "pl_asset", "s_inc": "pl_inc", "s_de": "de_disc", "s_new": "de_new", "s_out": "de_out", "s_cf": "cf"}
     for k, src in link.items():
         for y in hist:
-            sh.cell(sum_rows[k], sh.col[y], f"={sh.ref(src, y)}/100000", BLACK, fmt="0.00", align="right")
+            sh.cell(sum_rows[k], sh.col[y], f"={sh.ref(src, y)}/{to_yi}", BLACK, fmt="0.00", align="right")
     rem = S.get("remarks", {}).get("政府补助分析", [])
     sh.note_block("备注与说明", [
         "【口径】港股「其他收入·政府補貼」= 当期计入损益的全部政府补助，其中与资产相关部分来自递延收入按资产年期直线摊销（现金流量资料「政府補貼攤銷」行），其余为与收益相关的当期补贴。",
