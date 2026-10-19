@@ -19,7 +19,7 @@ company.json（路径相对该文件所在目录）:
   "combined_output": "小米_财报拆分_2018-2025.xlsx"                     # 合并版产物名（写进 notes_spec.output / merge_into）
 }
 """
-import sys, os, json, subprocess
+import sys, os, json, subprocess, shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENG = os.path.join(HERE, "..", "engines")
@@ -51,6 +51,24 @@ def main():
     skip = {a for a in args[1:] if a.startswith("--")}
     short = S["short"]; combined = P(S["combined_output"])
     print(f"===== {S['company']} ({S['market']}股) 财报拆分 =====\n根目录 {common.BASE}\n公司目录 {cdir}")
+
+    # New expression layer: the company spec already contains extracted/reconciled data.
+    if S.get("workbook_spec"):
+        if "--only-check" in skip:
+            if not os.path.exists(combined):
+                raise SystemExit(f"待检查工作簿不存在：{combined}")
+            run([sys.executable, os.path.join(NA, "recalc_check.py"), combined], cdir)
+            return
+        node = os.environ.get("ARTIFACT_NODE") or shutil.which("node")
+        if not node:
+            raise SystemExit("新表达层需要可加载 @oai/artifact-tool 的 Node；设置 ARTIFACT_NODE 后重试。")
+        if S.get("digao_spec") and "--skip-digao" not in skip:
+            run([sys.executable, os.path.join(NA, "build_digao.py"), P(S["digao_spec"])], NA)
+        run([node, os.path.join(HERE, "build_workbook.mjs"), P(S["workbook_spec"]), combined], cdir)
+        run([sys.executable, os.path.join(HERE, "finalize_navigation.py"), P(S["workbook_spec"]), combined], cdir)
+        print(f"比亚迪表达版已生成：{combined}；另见 .checks.json 与 .formula-scan.ndjson。")
+        print("交付前按 references/byd-expression.md 核对数值守恒、底稿抽样及渲染。")
+        return
 
     # ① 收入分配拆分
     rs = S["revenue_split"]; split_xlsx = None

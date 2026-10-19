@@ -6,7 +6,9 @@
   "revenue_split": {"engine": "h_share", "config": "revenue_split.json"},
   "notes_spec": "notes_spec.json",
   "digao_spec": "研究底稿/digao_spec.json",
-  "combined_output": "小米_财报拆分_2018-2025.xlsx"
+  "combined_output": "小米_财报拆分_2018-2025.xlsx",
+  "workbook_spec": "workbook_spec.json",
+  "_workbook_spec说明": "新表达层；字段见 references/byd-expression.md。删除该字段仅用于复现旧版 Python 生成器。"
  },
 
  "revenue_split_h_share (revenue_split.json, 港股)": {

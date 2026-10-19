@@ -19,7 +19,8 @@
 ## 怎么用
 
 - 在 Claude 里直接说"做 XX 的财报拆分 / 按小米那套把 XX 拆一下"，Claude 会按 `SKILL.md` 的七步流程走。
-- 一家公司三份 JSON：`company.json`（入口）、`revenue_split.json`（收入分配引擎）、`notes_spec.json`（附注五表引擎），
+- 新表达版在 `company.json` 增加 `workbook_spec`，指向抽取并勾稽完成的完整二维模型 spec，由 `scripts/build_workbook.mjs` 渲染；Node 环境需支持 `@oai/artifact-tool`。
+- 数据抽取配置保留三份 JSON：`company.json`（入口）、`revenue_split.json`（收入分配引擎）、`notes_spec.json`（附注五表引擎），
   模板与字段说明见 `references/company_template.json`；然后一条命令：
   ```bash
   python3 scripts/run_breakdown.py outputs/XX/company.json
@@ -40,4 +41,4 @@
 
 - A 股附注五表生成器尚未抽象，目前 A 股只有收入分配全自动。
 - 港股部分中文年报 PDF 文本层乱码（字体无 Unicode 映射），需下载英文版读数，截图底稿也用英文版。
-- 格式按广发汽车研报三线表规范（思源黑体、深蓝表头），可在生成器常量里改。
+- 默认表达采用用户确认的比亚迪模型。布局、配色、空白模板和渲染入口见 [byd-expression.md](references/byd-expression.md)，表达调整需先确认。

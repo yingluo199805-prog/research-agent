@@ -1,5 +1,8 @@
 # company-breakdown 逐步命令（以港股为例；A 股差异见文末）
 
+新交付默认使用 [比亚迪表达模板](references/byd-expression.md)。完成取数与勾稽后，以 `assets/byd-expression-template.json` 为布局参考建立公司的 `workbook_spec.json`，将路径写入 `company.json.workbook_spec`，再运行总控。以下 Python 引擎步骤保留数据抽取和旧版复现；不得把旧版三线表当成新模板。
+
+
 所有命令在仓库根目录执行；`$B` = `outputs/收入分配`（三表/年报/收入分配工作簿根目录），`$C` = `outputs/{公司}`（公司目录）。
 
 ## 第 1 步：公司目录与 company.json

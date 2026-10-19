@@ -1,0 +1,27 @@
+{
+  "id": "byd-261011",
+  "reference": "用户上传的比亚迪模型，2026-10-11 版本；只提取财报拆分相关表达，不包含原始公司模型",
+  "font": "Microsoft YaHei",
+  "size": 10,
+  "revenue": {
+    "columns": {"cost_attribute": "A", "calculation_method": "B", "item": "C", "first_year": "D"},
+    "widths": {"A": 11, "B": 27, "C": 57, "year": 14.33},
+    "row_height": 18,
+    "blocks": ["总项金额", "总项占比", "分组细项金额", "同序细项占比", "底部附表"],
+    "colors": {"section": "F2DCDB", "bridge_label": "DBE5F1", "bridge_font": "FF0000", "revenue_label": "FFFF00", "body": "000000", "data_bar": "638EC6"},
+    "amount_format": "0.00;[Red](0.00);0.00",
+    "ratio_format": "0.0%;[Red](0.0%);0.0%",
+    "method_wrap": true,
+    "freeze": "D3"
+  },
+  "notes": {
+    "columns": {"item": "B", "source": "C", "first_year": "D"},
+    "widths": {"A": 2.66, "B": 36.66, "C": 16.5, "year": 13.83},
+    "row_height": 15.5,
+    "colors": {"header": "1F4E78", "section": "D9E2F3", "total": "FFE699", "check": "E2EFDA", "actual": "1F4E78", "assumption": "C00000", "formula": "000000"},
+    "amount_format": "#,##0;(#,##0);\"-\"",
+    "freeze": "D6"
+  },
+  "government": {"item_column": "A", "first_year": "B", "summary_unit": "亿元", "detail_unit": "千元", "summary_color": "D6E4F0", "title_color": "365F91", "freeze": "B6"},
+  "confirmed_changes": ["加宽并换行左侧计算方法备注", "少数股东和归母净利润来源备注与科目相符", "费用及供应商独立勾稽集中在底部附表"]
+}

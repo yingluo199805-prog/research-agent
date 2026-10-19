@@ -13,9 +13,11 @@ description: >-
 
 一家公司 = 一个公司目录 `outputs/{公司}/` + 一个合并版工作簿 `{公司}_财报拆分_{起}-{终}.xlsx`。
 两个引擎收在 `engines/` 下（原 build-revenue-split、annual-report-notes-analysis），本技能只定义**顺序、输入契约、交付契约与验收**，
-确定性的生成/合并/自检交给 `scripts/run_breakdown.py`。已按此交付：零跑（2022-2025）、小米（2018-2025）。
+确定性的生成/合并/自检交给 `scripts/run_breakdown.py`。默认表达采用用户确认的比亚迪模型（byd-261011），先读 [表达规则与生成接口](references/byd-expression.md)。已按此交付：零跑（2022-2025）、小米（2018-2025）。
 
 ## 0. 环境（本机 macOS）
+
+数据提取沿用下列 Python 工具。新表达版可直接填充空白模板；Codex 环境另提供基于 `@oai/artifact-tool` 的渲染入口（见表达规则），运行该入口需可用的 Node runtime。
 
 Python 3.9 + openpyxl + PyMuPDF + formulas。无 Excel COM / LibreOffice / pdftotext / web-access：年报文本用 PyMuPDF 词坐标重排，
 重算用 formulas，下载用 WebFetch/curl。根目录 `REVENUE_SPLIT_BASE`（默认 `<仓库>/outputs/收入分配`，放三表导出、年报 PDF 与收入分配工作簿）；
@@ -47,8 +49,10 @@ A 股与港股的口径差异（类别、净值滚动、在建工程位置、研
 ## 3. 交付契约
 
 合并版工作簿固定九张表（顺序不可改）：`目录` / `{公司}三表` / `{公司}附注底稿` / `收入分配拆分` / `固定资产` / `在建工程` / `无形资产` / `资本化研发` / `政府补助分析`。
-颜色规范：深蓝=年报实际、深红=可调假设、黑=公式、黄底=合计、绿底=校验。每张附注表末尾必有备注区：【口径】【特殊事项】【关键预测输出】，
+表达规范见 [比亚迪表达模板](references/byd-expression.md)：收入表为总项金额/总项占比/分组细项金额/同序细项占比/底部附表，保留 A 成本属性、B 计算方法、C 项目；附注表沿用深蓝实际、深红假设、黑色公式、黄色合计和绿色校验。每张附注表末尾必有备注区：【口径】【特殊事项】【关键预测输出】，
 非零校验行逐条点名。另交 `研究底稿/{公司}_年报附注底稿.xlsx`（截图，按年份升序）。
+
+生成新表达版时，按 `assets/byd-expression-template.json` 的接口建立公司 `workbook_spec.json`，在 `company.json` 填 `workbook_spec`。可从空白模板 `assets/byd-expression-template.xlsx` 检查外观；不得直接移植参考公司的财务数值或类别。调整表达先展示具体变化并征得用户确认。
 
 ## 4. 验收（run_breakdown 自动打印，人工补三条）
 
