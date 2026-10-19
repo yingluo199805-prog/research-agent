@@ -36,7 +36,7 @@ const styles={
 let formulaCount=0;
 for(const d of spec.sheets){
  const sh=wb.worksheets.getItem(d.name),rev=d.layout==='revenue',gov=d.layout==='government',notes=d.layout==='notes';
- const yc=d.yearColumn||4,lc=d.labelColumn||2,sc=d.sourceColumn, N=d.rows.length, nc=Math.max(yc+d.years.length-1,...d.rows.map(r=>r.length),gov?10:13),last=col(nc);
+ const yc=d.yearColumn||4,lc=d.labelColumn||2,sc=d.sourceColumn, N=d.rows.length, nc=Math.max(yc+d.years.length-1,...d.rows.map(r=>r.length),d.years.length?0:13),last=col(nc);
  sh.showGridLines=rev;sh.tabColor=rev?'#FF0000':gov?'#365F91':'#1F4E78';
  sh.getRange(`A1:${last}${N}`).values=d.rows.map(r=>Array.from({length:nc},(_,i)=>typeof r[i]==='string'&&r[i].startsWith('=')?null:r[i]??null));
  sh.getRange(`A1:${last}${N}`).format={font:{name:profile.font,size:10,color:'#000000'},rowHeight:rev?18:15.5,verticalAlignment:'center'};
@@ -58,6 +58,13 @@ for(const d of spec.sheets){
    if(sty==='note'){const t=String(row[lc-1]||'');range.format.rowHeight=Math.max(25,Math.ceil(t.length/100)*16);}
   }
   if(sty==='total'&&!rev){sh.getRange(`${col(yc)}${r}:${last}${r}`).format.fill='#'+C.total;}
+  if(!rev&&!gov&&!['title','subtitle','header','section','note'].includes(sty)){
+   // Keep source descriptions and long project names readable at the profile's widths.
+   const width=t=>[...String(t||'')].reduce((n,c)=>n+(c.charCodeAt(0)>255?1:.55),0);
+   sh.getRange(`B${r}`).format.wrapText=true;
+   const lines=Math.max(Math.ceil(width(row[1])/(notes?25:33)),Math.ceil(width(row[2])/(notes?11:16)));
+   if(lines>1)range.format.rowHeight=lines*13.5;
+  }
   const numeric=sh.getRange(`${col(yc)}${r}:${last}${r}`);
   if(notes||(!rev&&!gov)){
    if(!['header','title','subtitle','section','note','check','total'].includes(sty)){
